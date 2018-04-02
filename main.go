@@ -1,13 +1,28 @@
+/*
+   Copyright [2018] [Samuel Stevens]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 package main
 
 import (
-	"os"
-	"log"
-	"io/ioutil"
 	"fmt"
-	"strings"
-	"os/user"
 	"github.com/manifoldco/promptui"
+	"io/ioutil"
+	"log"
+	"os"
+	"os/user"
+	"strings"
 )
 
 type host struct {
@@ -25,7 +40,7 @@ func readFile(file string) string {
 }
 
 func readHosts(lines []string) []host {
-	hosts := make([]host,0)
+	hosts := make([]host, 0)
 	current := host{}
 
 	for _, line := range lines {
@@ -43,7 +58,7 @@ func readHosts(lines []string) []host {
 			if err == nil {
 				currentUserName = currentUser.Username
 			}
-			current = host{Name:fields[1], HostName: fields[1], User: currentUserName}
+			current = host{Name: fields[1], HostName: fields[1], User: currentUserName}
 		}
 		if nameLower == "hostname" {
 			current.HostName = fields[1]
@@ -79,7 +94,7 @@ func main() {
 		return strings.Contains(name, input)
 	}
 
-	templates := &promptui.SelectTemplates {
+	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
 		Active:   ">{{ .User | cyan }}@({{ .HostName | red }})",
 		Inactive: " {{ .User | cyan }}@({{ .HostName | red }})",
