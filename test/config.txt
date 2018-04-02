@@ -1,0 +1,7 @@
+Host host1
+        HostName        hostname1
+        User            user1
+Host host2
+    HostName hostname2
+    User someone
+Host host3
