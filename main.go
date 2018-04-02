@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/user"
 	"strings"
+	"os/exec"
 )
 
 type host struct {
@@ -94,11 +95,12 @@ func main() {
 		return strings.Contains(name, input)
 	}
 
+	hostTemplate := "{{\"[\" | bold}}{{.Name | cyan | bold }}{{\"]\" | bold}} {{ .User |bold }} @ {{ .HostName | bold }}"
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   ">{{ .User | cyan }}@({{ .HostName | red }})",
-		Inactive: " {{ .User | cyan }}@({{ .HostName | red }})",
-		Selected: "{{ .User | cyan }}@({{ .HostName | red }})",
+		Active:   fmt.Sprintf(">%s", hostTemplate),
+		Inactive: fmt.Sprintf(" %s", hostTemplate),
+		Selected: "{{\"Connecting to\"|bold}} {{.Name|cyan|bold}}",
 	}
 
 	prompt := promptui.Select{
@@ -109,12 +111,16 @@ func main() {
 		Searcher:  searcher,
 	}
 
-	i, _, err := prompt.Run()
+	i, _, promptErr := prompt.Run()
 
-	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
+	if promptErr != nil {
+		fmt.Print("No option selected")
 		return
 	}
 
-	fmt.Printf("You choose number %d: %s\n", i+1, hosts[i].Name)
+	cmd := exec.Command("ssh", hosts[i].Name)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Run()
 }
