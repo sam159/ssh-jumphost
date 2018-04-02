@@ -97,14 +97,14 @@ func main() {
 
 	hostTemplate := "{{\"[\" | bold}}{{.Name | cyan | bold }}{{\"]\" | bold}} {{ .User |bold }} @ {{ .HostName | bold }}"
 	templates := &promptui.SelectTemplates{
-		Label:    "{{ . }}",
+		Label:    "{{ . | bold }}",
 		Active:   fmt.Sprintf(">%s", hostTemplate),
 		Inactive: fmt.Sprintf(" %s", hostTemplate),
 		Selected: "{{\"Connecting to\"|bold}} {{.Name|cyan|bold}}",
 	}
 
 	prompt := promptui.Select{
-		Label:     "Select Host/Option",
+		Label:     "Select SSH Host",
 		Items:     hosts,
 		Templates: templates,
 		Size:      4,
@@ -114,7 +114,7 @@ func main() {
 	i, _, promptErr := prompt.Run()
 
 	if promptErr != nil {
-		fmt.Print("No option selected")
+		fmt.Println("No option selected")
 		return
 	}
 
