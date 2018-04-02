@@ -75,6 +75,39 @@ func readHosts(lines []string) []host {
 	return hosts
 }
 
+func promptHost(hosts []host) (host, error) {
+	searcher := func(input string, index int) bool {
+                host := hosts[index]
+                name := strings.Replace(strings.ToLower(host.Name+host.User+host.HostName), " ", "", -1)
+                input = strings.Replace(strings.ToLower(input), " ", "", -1)
+
+                return strings.Contains(name, input)
+        }
+	hostTemplate := "{{\"[\" | bold}}{{.Name | cyan | bold }}{{\"]\" | bold}} {{ .User |bold }} @ {{ .HostName | bold }}"
+        templates := &promptui.SelectTemplates{
+                Label:    "{{ . | bold }}",
+                Active:   fmt.Sprintf(">%s", hostTemplate),
+                Inactive: fmt.Sprintf(" %s", hostTemplate),
+                Selected: "{{\"Connecting to\"|bold}} {{.Name|cyan|bold}}",
+        }
+
+        prompt := promptui.Select{
+                Label:     "Select SSH Host",
+                Items:     hosts,
+                Templates: templates,
+                Size:      len(hosts),
+                Searcher:  searcher,
+        }
+
+        i, _, promptErr := prompt.Run()
+
+        if promptErr != nil {
+                return host{}, promptErr
+        }
+
+	return hosts[i], nil
+}
+
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
@@ -87,40 +120,19 @@ func main() {
 	}
 	hosts := readHosts(lines)
 
-	searcher := func(input string, index int) bool {
-		host := hosts[index]
-		name := strings.Replace(strings.ToLower(host.Name+host.User+host.HostName), " ", "", -1)
-		input = strings.Replace(strings.ToLower(input), " ", "", -1)
+	var selected host
+	var promptErr error
 
-		return strings.Contains(name, input)
+	for {
+		selected, promptErr = promptHost(hosts)
+		if promptErr != nil {
+			break
+		}
+		cmd := exec.Command("ssh", selected.Name)
+	        cmd.Stdin = os.Stdin
+        	cmd.Stdout = os.Stdout
+	        cmd.Stderr = os.Stderr
+        	cmd.Run()
+		fmt.Println("\n\tSSH Session Closed\n")
 	}
-
-	hostTemplate := "{{\"[\" | bold}}{{.Name | cyan | bold }}{{\"]\" | bold}} {{ .User |bold }} @ {{ .HostName | bold }}"
-	templates := &promptui.SelectTemplates{
-		Label:    "{{ . | bold }}",
-		Active:   fmt.Sprintf(">%s", hostTemplate),
-		Inactive: fmt.Sprintf(" %s", hostTemplate),
-		Selected: "{{\"Connecting to\"|bold}} {{.Name|cyan|bold}}",
-	}
-
-	prompt := promptui.Select{
-		Label:     "Select SSH Host",
-		Items:     hosts,
-		Templates: templates,
-		Size:      4,
-		Searcher:  searcher,
-	}
-
-	i, _, promptErr := prompt.Run()
-
-	if promptErr != nil {
-		fmt.Println("No option selected")
-		return
-	}
-
-	cmd := exec.Command("ssh", hosts[i].Name)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Run()
 }
